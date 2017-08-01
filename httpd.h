@@ -18,7 +18,7 @@
 #include<sys/sendfile.h>
 int get_listen_sock(int port);
 int get_line(int sock,char *buff,int size);
-void exec_cgi();
+void exec_cgi(int sock,char* method,char *path);
 void send_error(int sock,int error_code);
 void handle_http_request(int sock);
 void handle_simple_get(int sock,const char *path);
