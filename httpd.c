@@ -218,7 +218,8 @@ void handle_http_request(int sock){
 	char really_path[128] = {0};
 	sprintf(really_path,"wwwroot%s",path);
 	tmp = strchr(really_path,'?');	
-	*tmp = '\0';
+	if(tmp!=NULL)
+		*tmp = '\0';
 	printf("really_path:%s\n",really_path);
 	
 	//对请求文件进行检测
