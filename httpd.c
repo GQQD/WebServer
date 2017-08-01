@@ -1,5 +1,5 @@
 /**************************************
-*文件说明:httpd.c
+*文件说明:httpd.
 *作者:高小调
 *创建时间:2017年07月31日 星期一 19时16分40秒
 *开发环境:Kali Linux/g++ v6.3.0
@@ -8,18 +8,22 @@
 static const char* respond_line = "HTTP/1.0 200 OK\r\n";
 static const char* blank_line = "\r\n";
 
-void exec_cgi(){
 
+//处理CGI
+void exec_cgi(int sock,char *method,char *path){
+	
 }
-
-
+//处理简单的get请求
 void handle_simple_get(int sock,const char *path){
-	//将多余请求读取掉
-	int ret = -1;
+	//读取多余请求
+	int ret = 1;
 	char buff[1024];
 	do{
-		get_line(sock,buff,sizeof(buff));
-	}while(buff[0] == '\n');
+		ret = get_line(sock,buff,sizeof(buff));
+		printf("ret = %d,I get some data:%s",ret,buff);
+	}while(ret!=1);
+	printf("ret:%d,buff:%s",ret,buff);	
+	//将简单请求应答回去
 	struct stat file_info;
 	if(stat(path,&file_info) < 0){
 		//文件不存在,返回404状态码
@@ -36,7 +40,6 @@ void handle_simple_get(int sock,const char *path){
 	if(sendfile(sock,fd,NULL,file_info.st_size) < 0){
 		perror("handle_simple_get:sendfile");
 	}
-
 	close(fd);
 }
 
@@ -63,15 +66,25 @@ int get_listen_sock(int port){
 }
 
 //从http请求中获取一行数据
+//成功大于0,连接终止返回-1
 int get_line(int sock,char *buff,int size){
 	char ch = '\0';
 	int index = 0;
 	while(index<size &&ch!='\n'){
-		recv(sock,&ch,1,0);
+		if(recv(sock,&ch,1,0) == 0){
+			//客户端断开连接
+			return -1;
+		}
 		if(ch == '\r'){
-			recv(sock,&ch,1,MSG_PEEK);
+			if(recv(sock,&ch,1,MSG_PEEK) == 0){
+				//客户端断开连接
+				return -1;
+			}
 			if(ch == '\n'){
-				recv(sock,&ch,1,0);
+				if(recv(sock,&ch,1,0) == 0){
+					//客户端断开链接
+					return -1;
+				}
 			}else{
 				ch = '\n';
 			}
@@ -107,6 +120,7 @@ void handle_http_request(int sock){
 	}
 	*tmp = '\0';
 	--tmp;
+	//如果请求的是 / ,则为其添加默认首页
 	if(*tmp == '/'){
 		sprintf(path,"%sindex.html",path);
 	}
@@ -126,7 +140,7 @@ void handle_http_request(int sock){
 		handle_simple_get(sock,full_path);
 	}
 	//GET请求带参数 或者 POST请求,需要用到CGI
-//	exec_cgi();
+	exec_cgi(sock,method,full_path);
 end:
 	//printf("enddddddddddddddddddd\n");
 	//send_error(sock,error_code);
