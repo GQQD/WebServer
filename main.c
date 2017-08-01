@@ -10,6 +10,13 @@ int main(int argc,const char * argv[]){
 		printf("Usage:%s [port]\n",argv[0]);
 		return 1;
 	}
+	umask(0);
+	int fd = open("log",O_RDWR);
+	if(fd < 0){
+		perror("open");
+		return 3;
+	}
+	//dup2(fd,1);
 	int listen_sock = get_listen_sock(atoi(argv[1]));
 	int epfd = epoll_create(256);
 	if(epfd < 0){
@@ -46,7 +53,7 @@ int main(int argc,const char * argv[]){
 							perror("accept");
 							break;
 						}
-						printf("get a new client:%s:%d\n",inet_ntoa(client.sin_addr),ntohs(client.sin_port));
+						printf("\n\nget a new client:%s:%d\n",inet_ntoa(client.sin_addr),ntohs(client.sin_port));
 						//将新客户的socket加入epoll模型
 						event.events = EPOLLIN;
 						event.data.fd = new_client;
