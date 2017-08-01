@@ -5,11 +5,19 @@
 *开发环境:Kali Linux/g++ v6.3.0
 ****************************************/
 #include"httpd.h"
+#include<pthread.h>
 int main(int argc,const char * argv[]){
 	if(argc!=2){
 		printf("Usage:%s [port]\n",argv[0]);
 		return 1;
 	}
+	umask(0);
+	int fd = open("log",O_RDWR);
+	if(fd < 0){
+		perror("open");
+		return 3;
+	}
+	//dup2(fd,1);
 	int listen_sock = get_listen_sock(atoi(argv[1]));
 	int epfd = epoll_create(256);
 	if(epfd < 0){
@@ -46,9 +54,9 @@ int main(int argc,const char * argv[]){
 							perror("accept");
 							break;
 						}
-						printf("get a new client:%s:%d\n",inet_ntoa(client.sin_addr),ntohs(client.sin_port));
+						printf("\n\nget a new client:%s:%d\n",inet_ntoa(client.sin_addr),ntohs(client.sin_port));
 						//将新客户的socket加入epoll模型
-						event.events = EPOLLIN;
+						event.events = EPOLLIN | EPOLLET;
 						event.data.fd = new_client;
 						if(epoll_ctl(epfd,EPOLL_CTL_ADD,new_client,&event) < 0){
 							perror("add new client to epoll fail");
@@ -56,10 +64,16 @@ int main(int argc,const char * argv[]){
 						}
 					}else if( ev&&EPOLLIN){
 						//处理客户端发来的http请求
-						handle_http_request(fd);	
-						//处理完后关闭连接
-						epoll_ctl(epfd,EPOLL_CTL_DEL,fd,&event_list[i]);
-						close(fd);	
+						pthread_t cid;
+						//记录相关信息
+						struct thread_arg thread_info;
+						thread_info.epfd = epfd;
+						thread_info.sock = fd;
+						thread_info.event = &event_list[i];
+						//启动线程
+						pthread_create(&cid,NULL,thread_handle_http_request,(void*)&thread_info);
+						//分离线程
+						pthread_detach(cid);
 					}else{
 						//忽略其他事件,关闭链接
 						printf("received other request\n");

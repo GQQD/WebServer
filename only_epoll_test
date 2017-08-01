@@ -1,0 +1,40 @@
+///////////////Only_Epoll_1_clients//////////////////
+Webbench - Simple Web Benchmark 1.5
+Copyright (c) Radim Kolar 1997-2004, GPL Open Source Software.
+
+Benchmarking: GET http://localhost:80/index.html
+1 client, running 30 sec.
+
+Speed=366820 pages/min, 41536252 bytes/sec.
+Requests: 183410 susceed, 0 failed.
+
+///////////////Only_Epoll_10_clients//////////////////
+Webbench - Simple Web Benchmark 1.5
+Copyright (c) Radim Kolar 1997-2004, GPL Open Source Software.
+
+Benchmarking: GET http://localhost:80/index.html
+10 clients, running 30 sec.
+
+Speed=694490 pages/min, -64526612 bytes/sec.
+Requests: 347243 susceed, 2 failed.
+
+///////////////Only_Epoll_100_clients//////////////////
+Webbench - Simple Web Benchmark 1.5
+Copyright (c) Radim Kolar 1997-2004, GPL Open Source Software.
+
+Benchmarking: GET http://localhost/index.html
+100 clients, running 30 sec.
+
+Speed=673288 pages/min, -66927108 bytes/sec.
+Requests: 336644 susceed, 0 failed.
+
+///////////////Only_Epoll_1000_clients//////////////////
+Webbench - Simple Web Benchmark 1.5
+Copyright (c) Radim Kolar 1997-2004, GPL Open Source Software.
+
+Benchmarking: GET http://localhost/index.html
+1000 clients, running 30 sec.
+
+Speed=629176 pages/min, 71237808 bytes/sec.
+Requests: 314562 susceed, 26 failed.
+
