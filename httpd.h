@@ -23,6 +23,8 @@ void exec_cgi(int sock,char* method,char *path);
 void send_error(int sock,int error_code);
 void handle_http_request(int sock);
 void handle_simple_get(int sock,char *path,int size);
+int check_sock_connected(int sock);
+void handler(int sig);
 
 ////////////多线程部分////////////
 struct thread_arg{

@@ -7,6 +7,23 @@
 #include"httpd.h"
 static const char* respond_line = "HTTP/1.0 200 OK\r\n";
 static const char* blank_line = "\r\n";
+void handler(int sig){
+	//printf("get a sig %d\n",sig);
+}
+
+//检测客户端是否在线(处于连接状态)
+int check_sock_connected(int sock){
+	/*
+	struct tcp_info info;
+	socklen_t len = sizeof(info);
+	getsockopt(sock,IPPROTO_TCP,TCP_INFO,&info,&len);
+	if(info.tcpi_state == TCP_ESTABLISHED){
+		return 1;
+	}
+	return 0;
+	*/
+	return 1;
+}
 //CGI处理
 void exec_cgi(int sock,char *method,char *path){
 	char buff[1024] = {0};
@@ -70,7 +87,6 @@ void exec_cgi(int sock,char *method,char *path){
 		close(output[0]);
 		dup2(input[0],0);
 		dup2(output[1],1);
-		////printf("hello\n");
 		execl(path,path,NULL);
 		//printf("child:error");
 	}else if(pid > 0){	//father
@@ -84,12 +100,12 @@ void exec_cgi(int sock,char *method,char *path){
 		send(sock,respond_line,strlen(respond_line),0);
 		send(sock,blank_line,strlen(blank_line),0);
 		ssize_t s = 0;
-		//do{
+		do{
 			s = read(output[0],buff,sizeof(buff));
 			buff[s] = 0;
 			send(sock,buff,s,0);
 			//printf("buff is %s",buff);
-		//}while(s != 0);
+		}while(s != 0);
 		wait(NULL);
 		//printf("wait over\n");
 		close(input[1]);
@@ -106,17 +122,29 @@ void handle_simple_get(int sock,char *path,int size){
 		ret = get_line(sock,buff,sizeof(buff));
 		//printf("ret = %d,I get some data:%s",ret,buff);
 	}while(ret!=1&&ret!=0);
-	//printf("ret:%d,buff:%s",ret,buff);	
-		int fd = open(path,O_RDONLY);
-	if(fd < 0){
-		perror("handle_simple_get:open");
+	int state= check_sock_connected(sock);		
+	if(state && send(sock,respond_line,strlen(respond_line),0) < 0){
+		perror("send respond_line fail:");
+		return ;	
+	}
+	state = check_sock_connected(sock);
+	if(state && send(sock,blank_line,strlen(blank_line),0) < 0){
+		perror("blank_line fail:");
 		return ;
 	}
-	send(sock,respond_line,strlen(respond_line),0);
-	send(sock,blank_line,strlen(blank_line),0);
-	if(sendfile(sock,fd,NULL,size) < 0){
+	//打开请求文件
+	int fd = open(path,O_RDONLY);
+	if(fd < 0){
+		perror("handle_simple_get:open");
+		goto end;
+	}
+	state = check_sock_connected(sock);
+	//发送数据
+	if(state && sendfile(sock,fd,NULL,size) < 0){
 		perror("handle_simple_get:sendfile");
 	}
+	//printf("数据发送完毕,并关闭fd\n");
+end:
 	close(fd);
 }
 
@@ -176,7 +204,10 @@ void handle_http_request(int sock){
 	char buff[1024];
 	int error_code = 500;
 	//拿到http请求头信息 GET / HTTP/1.0
-	get_line(sock,buff,sizeof(buff));
+	if(get_line(sock,buff,sizeof(buff)) == -1){
+		//printf("没有请求任何信息\n");
+		goto end;
+	}
 	char *method = buff;
 	char *tmp = buff;
 	char *path = NULL;
@@ -261,7 +292,7 @@ void handle_http_request(int sock){
 	//GET请求带参数(一定存在=) 或者 POST请求,需要用到CGI
 	exec_cgi(sock,method,full_path);
 end:
-	////printf("enddddddddddddddddddd\n");
+	//printf("enddddddddddddddddddd\n");
 	//send_error(sock,error_code);
 	return ;
 }

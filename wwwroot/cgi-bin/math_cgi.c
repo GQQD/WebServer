@@ -42,6 +42,5 @@ void main_handler(){
 }
 int main(){
 	main_handler();
-	//printf("i am cgi\n");
 	return 0;
 }
