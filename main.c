@@ -34,7 +34,7 @@ int main(int argc,const char * argv[]){
 				break;
 			case 0:
 				//time out
-				printf("current online clients:%d\nmax client:%d\n",client_count,max_client);	
+			//	printf("current online clients:%d\nmax client:%d\n",client_count,max_client);	
 				break;
 			default:
 				for(int i=0; i<ready_nums; ++i){
@@ -63,8 +63,9 @@ int main(int argc,const char * argv[]){
 						}
 					}else if( ev&EPOLLIN){
 						//处理客户端发来的http请求
-						handle_http_request(fd);	
+						
 						--client_count;
+						handle_http_request(fd);	
 						//处理完后关闭连接
 						close(fd);
 						epoll_ctl(epfd,EPOLL_CTL_DEL,fd,&event_list[i]);

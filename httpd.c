@@ -5,10 +5,10 @@
 *开发环境:Kali Linux/g++ v6.3.0
 ****************************************/
 #include"httpd.h"
-static const char* respond_line = "HTTP/1.0 200 OK\r\n";
+static const char* respond_line = "HTTP/1.0 200 OK\r\nContent-type:text/html\r\n";
 static const char* blank_line = "\r\n";
 void handler(int sig){
-	//printf("get a sig %d\n",sig);
+	printf("get a sig %d\n",sig);
 }
 
 //检测客户端是否在线(处于连接状态)
@@ -39,29 +39,35 @@ void exec_cgi(int sock,char *method,char *path){
 		}
 		do{
 			ret = get_line(sock,buff,sizeof(buff));
-			//printf("[GET]%s",buff);
 		}while(ret!=1);
 		*tmp = '\0';
+		putenv("REQUEST_METHOD=GET");
 	}else{
+		putenv("REQUEST_METHOD=POST");
+		char env_content_length[128] = {0};
+		sprintf(env_content_length,"CONTENT_LENGTH=%d",len);
+		putenv(env_content_length);
+		
 		//当前为post请求,从请求正文中提取请求参数
 		do{
 			ret = get_line(sock,buff,sizeof(buff));
-			//printf("[POST]%s",buff);
+			printf("[POST]%s",buff);
 			if(strncasecmp(buff,"Content-Length: ",16) == 0){
 				char *space = strchr(buff,' ');
 				if(space == NULL){
-					//printf("space is NULL\n");
+					printf("space is NULL\n");
 					return ;
 				}
 				len = atoi(space);
 			}
 		}while(ret!=1&&ret!=0);
-		//printf("i get the len:%d\n",len);
+		printf("i get the len:%d\n",len);
+		
 		//读post的请求参数
 		ret = recv(sock,buff,len,0);
 		buff[len] = '\0';
 		if(ret == 0){
-			//printf("[POST]the data is over\n");
+			printf("[POST]the data is over\n");
 			return ;
 		}else if(ret < 0){
 			perror("[POST]get data fail");
@@ -69,7 +75,11 @@ void exec_cgi(int sock,char *method,char *path){
 		}
 		query_string = buff;
 	}
-	//printf("query_string:%s\n",query_string);
+	
+	char env_query_string[128] ={0};
+	sprintf(env_query_string,"QUERY_STRING=%s",query_string);
+	putenv(env_query_string);
+	printf("query_string:%s\n",query_string);
 	int input[2];
 	int output[2];
 	if(pipe(input) < 0){
@@ -81,21 +91,21 @@ void exec_cgi(int sock,char *method,char *path){
 		return ;
 	}
 	pid_t pid = fork();
-	//printf("child:running path is %s\n",path);
+	printf("child:running path is %s\n",path);
 	if(pid == 0){		//child
 		close(input[1]);
 		close(output[0]);
 		dup2(input[0],0);
 		dup2(output[1],1);
 		execl(path,path,NULL);
-		//printf("child:error");
+		printf("child:error");
 	}else if(pid > 0){	//father
 		close(input[0]);
 		close(output[1]);
 		char buff[4096] = {0};
 		//将请求信息写入管道
 		write(input[1],query_string,strlen(query_string));
-		//printf("father:%s is written in pipe\n",query_string);
+		printf("father:%s is written in pipe\n",query_string);
 		//从管道中读出信息发送给client	
 		send(sock,respond_line,strlen(respond_line),0);
 		send(sock,blank_line,strlen(blank_line),0);
@@ -104,13 +114,13 @@ void exec_cgi(int sock,char *method,char *path){
 			s = read(output[0],buff,sizeof(buff));
 			buff[s] = 0;
 			send(sock,buff,s,0);
-			//printf("buff is %s",buff);
+			printf("buff is %s",buff);
 		}while(s != 0);
 		wait(NULL);
-		//printf("wait over\n");
+		printf("wait over\n");
 		close(input[1]);
 		close(output[0]);
-		//printf("father is over\n");
+		printf("father is over\n");
 	}
 }
 //处理简单的get请求
@@ -120,7 +130,7 @@ void handle_simple_get(int sock,char *path,int size){
 	char buff[1024];
 	do{
 		ret = get_line(sock,buff,sizeof(buff));
-		//printf("ret = %d,I get some data:%s",ret,buff);
+		printf("ret = %d,I get some data:%s",ret,buff);
 	}while(ret!=1&&ret!=0);
 	int state= check_sock_connected(sock);		
 	if(state && send(sock,respond_line,strlen(respond_line),0) < 0){
@@ -143,7 +153,7 @@ void handle_simple_get(int sock,char *path,int size){
 	if(state && sendfile(sock,fd,NULL,size) < 0){
 		perror("handle_simple_get:sendfile");
 	}
-	//printf("数据发送完毕,并关闭fd\n");
+	printf("数据发送完毕,并关闭fd\n");
 end:
 	close(fd);
 }
@@ -205,7 +215,7 @@ void handle_http_request(int sock){
 	int error_code = 500;
 	//拿到http请求头信息 GET / HTTP/1.0
 	if(get_line(sock,buff,sizeof(buff)) == -1){
-		//printf("没有请求任何信息\n");
+		printf("没有请求任何信息\n");
 		goto end;
 	}
 	char *method = buff;
@@ -220,7 +230,7 @@ void handle_http_request(int sock){
 	while(*tmp == ' '){
 		++tmp;
 	}
-	//printf("method:%s\n",method);
+	printf("method:%s\n",method);
 	//path:不带web根目录的路径
 	path = tmp;
 	while(*tmp!=' '){
@@ -232,7 +242,7 @@ void handle_http_request(int sock){
 		//如果请求的是 / ,则为其添加默认首页
 		sprintf(path,"%sindex.html",path);
 	}
-	//printf("path:%s\n",path);
+	printf("path:%s\n",path);
 	
 	if(strcasecmp(method,"GET")!=0 && strcasecmp(method,"POST")!=0){
 		//既不是GET请求,也不是POST请求
@@ -243,7 +253,7 @@ void handle_http_request(int sock){
 	//full_path:完整带参数的文件路径
 	char full_path[128] = {0};
 	sprintf(full_path,"wwwroot%s",path);
-	//printf("full_path:%s\n",full_path);
+	printf("full_path:%s\n",full_path);
 	
 	//really_path:完整无参的文件路径
 	char really_path[128] = {0};
@@ -251,48 +261,47 @@ void handle_http_request(int sock){
 	tmp = strchr(really_path,'?');	
 	if(tmp!=NULL)
 		*tmp = '\0';
-	//printf("really_path:%s\n",really_path);
+	printf("really_path:%s\n",really_path);
 	
 	//对请求文件进行检测
 	struct stat file_info;
 	if(stat(really_path,&file_info) < 0){
 		//文件不存在,返回404状态码
-		//printf("文件不存在,返回404\n");
+		printf("文件不存在,返回404\n");
 		send_error(sock,404);
 		return ;
 	}
 	if(S_ISDIR(file_info.st_mode)){
 		//当前请求的为目录,则为其加上首页
 		sprintf(full_path,"%s/index.html",full_path);
-		//printf("当前请求的为目录,新的full_path为%s\n",full_path);
+		printf("当前请求的为目录,新的full_path为%s\n",full_path);
 	}
 
-	/*
 	if(file_info.st_mode & S_IXOTH){
 		//当前请求存在可执行权限
 		//printf("path=%s\n",path);
+		exec_cgi(sock,method,full_path);
 		return ;
-	}
-	*/	
+	}	
 	
 	//GET POST GET带参数
 	if(strcasecmp(method,"GET")==0 && strchr(path,'?')==NULL){
 		//GET请求 且 不带参数
-		//printf("GET请求且不带参数\n");
+		printf("GET请求且不带参数\n");
 		handle_simple_get(sock,full_path,file_info.st_size);
 		return ;
 	}
 	if(strchr(path,'?')!=NULL && strchr(path,'=')==NULL){	
 		//虽然GET请求中存在?但不存在=,仍然当作简单请求处理.
-		//printf("带?但不带=\n");
+		printf("带?但不带=\n");
 		handle_simple_get(sock,full_path,file_info.st_size);
 		return ;
 	}
-	//printf("need cgi!\n");
+	printf("need cgi!\n");
 	//GET请求带参数(一定存在=) 或者 POST请求,需要用到CGI
 	exec_cgi(sock,method,full_path);
 end:
-	//printf("enddddddddddddddddddd\n");
+	printf("enddddddddddddddddddd\n");
 	//send_error(sock,error_code);
 	return ;
 }
@@ -326,7 +335,7 @@ void* thread_handle_http_request(void* arg){
 	while(*tmp == ' '){
 		++tmp;
 	}
-	//printf("method:%s\n",method);
+	printf("method:%s\n",method);
 	//path:不带web根目录的路径
 	path = tmp;
 	while(*tmp!=' '){
@@ -338,7 +347,7 @@ void* thread_handle_http_request(void* arg){
 		//如果请求的是 / ,则为其添加默认首页
 		sprintf(path,"%sindex.html",path);
 	}
-	//printf("path:%s\n",path);
+	printf("path:%s\n",path);
 	
 	if(strcasecmp(method,"GET")!=0 && strcasecmp(method,"POST")!=0){
 		//既不是GET请求,也不是POST请求
@@ -349,7 +358,7 @@ void* thread_handle_http_request(void* arg){
 	//full_path:完整带参数的文件路径
 	char full_path[128] = {0};
 	sprintf(full_path,"wwwroot%s",path);
-	//printf("full_path:%s\n",full_path);
+	printf("full_path:%s\n",full_path);
 	
 	//really_path:完整无参的文件路径
 	char really_path[128] = {0};
@@ -357,26 +366,26 @@ void* thread_handle_http_request(void* arg){
 	tmp = strchr(really_path,'?');	
 	if(tmp!=NULL)
 		*tmp = '\0';
-	//printf("really_path:%s\n",really_path);
+	printf("really_path:%s\n",really_path);
 	
 	//对请求文件进行检测
 	struct stat file_info;
 	if(stat(really_path,&file_info) < 0){
 		//文件不存在,返回404状态码
-		//printf("文件不存在,返回404\n");
+		printf("文件不存在,返回404\n");
 		send_error(sock,404);
 		goto end;
 	}
 	if(S_ISDIR(file_info.st_mode)){
 		//当前请求的为目录,则为其加上首页
 		sprintf(full_path,"%s/index.html",full_path);
-		//printf("当前请求的为目录,新的full_path为%s\n",full_path);
+		printf("当前请求的为目录,新的full_path为%s\n",full_path);
 	}
 
 	/*
 	if(file_info.st_mode & S_IXOTH){
 		//当前请求存在可执行权限
-		//printf("path=%s\n",path);
+		printf("path=%s\n",path);
 		return ;
 	}
 	*/	
@@ -384,17 +393,17 @@ void* thread_handle_http_request(void* arg){
 	//GET POST GET带参数
 	if(strcasecmp(method,"GET")==0 && strchr(path,'?')==NULL){
 		//GET请求 且 不带参数
-		//printf("GET请求且不带参数\n");
+		printf("GET请求且不带参数\n");
 		handle_simple_get(sock,full_path,file_info.st_size);
 		goto end;
 	}
 	if(strchr(path,'?')!=NULL && strchr(path,'=')==NULL){	
 		//虽然GET请求中存在?但不存在=,仍然当作简单请求处理.
-		//printf("带?但不带=\n");
+		printf("带?但不带=\n");
 		handle_simple_get(sock,full_path,file_info.st_size);
 		goto end;
 	}
-	//printf("need cgi!\n");
+	printf("need cgi!\n");
 	//GET请求带参数(一定存在=) 或者 POST请求,需要用到CGI
 	exec_cgi(sock,method,full_path);
 end:

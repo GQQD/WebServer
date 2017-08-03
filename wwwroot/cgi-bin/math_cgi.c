@@ -41,6 +41,7 @@ void main_handler(){
 	printf("%d %% %d = %d\n",l,r,r!=0?l%r:0);
 }
 int main(){
-	main_handler();
+	//main_handler();
+	printf("hello\n");
 	return 0;
 }
