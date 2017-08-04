@@ -6,12 +6,14 @@
 *创建时间:2017年08月03日 星期四 15时38分03秒
 *开发环境:Kali Linux/Python v2.7.13
 """
+#WebScan相关模块
 from modules import cdn_check
 from modules import port_scan
 import requests
 from sys import argv
 from lib import Spider
 from modules import sql_check
+
 # CGI处理模块
 import cgi, cgitb
 # 创建 FieldStorage 的实例化
