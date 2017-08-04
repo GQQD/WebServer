@@ -6,10 +6,9 @@
 *创建时间:2017年08月03日 星期四 14时22分08秒
 *开发环境:Kali Linux/Python v2.7.13
 """
-import sys,Queue,threading,os,hashlib
+import sys,os,Queue,threading,hashlib,json
 sys.path.append("..")
 from lib import Downloader
-
 class webcms(object):
     work_queue = Queue.Queue()
     url = ""
@@ -26,7 +25,7 @@ class webcms(object):
         for i in webdata:
             self.work_queue.put(i)
         fp.close()
-    
+
     def md5(self,body):
         m = hashlib.md5()
         m.update(body)
@@ -35,9 +34,42 @@ class webcms(object):
     def thread_what_web(self):
         if(self.work_queue.empty()):
             self.NotFound = False
-        return False
+            return False
+        
         if(self.NotFound is False):
-            cms = self.work_queue.get()
-            _url = self.url + cms["url"]
-            html = self.Downloader.get(_url)
+            return False
+        
+        cms = self.work_queue.get()
+        _url = self.url + cms["url"]
+        html = self.Downloader.get(_url)
+        print "[webcms_check]:checking %s"%url
+        
+        if(html is None):
+            return False
+        if cms["re"] :
+            if(html.find(cms["re"]) != -1):
+                self.result = cms["name"]
+                self.NotFound = False
+                return True
+        else:
+            md5 = self.getmd5(html)
+            if(md5 == cms["md5"]):
+                self.result = cms["name"]
+                self.NotFound = False
+                return True
+
+        def run(self):
+            while(self.NotFound):
+                th = []
+                for i in range(self.threadNum):
+                    t = threading.Thread(target=self.thread_whatweb)
+                    t.start()
+                    th.append(t)
+                for t in th:
+                    t.join()
+                if(self.result):
+                    print "[webcms]:%s cms is %s"%(self.URL,self.result)
+                    #此处可以进行输出
+                else:
+                    print "[webcms]:%s cms NOTFound!"%self.URL
 
