@@ -19,7 +19,9 @@ class Downloader:
         try:
             r = requests.get(url,timeout=10,headers=self.header)
             encoding = requests.utils.get_encodings_from_content(r.content)
-            ret = r.content.decode(encoding[0]).encode('utf-8')
+            ret = r.text
+            if len(encoding)!=0:
+                ret = r.content.decode(encoding[0]).encode('utf-8')
             return ret
         except Exception,e:
             print Exception,":",e

@@ -14,7 +14,9 @@ from lib import Spider
 from modules import sql_check
 #测试检查页面是否存在sql注入
 def test_sql_check():
-    ret = sql_check.run("http://www.hbxffy1.com/info/dispnews.asp?id=1709")
+    #ret = sql_check.run("http://www.hbxffy1.com/info/dispnews.asp?id=1709")
+    #ret = sql_check.run("http://www.szxcc.com/gb/about1_xinxi.asp?id=325")
+    ret = sql_check.run("http://www.szxcc.com/gb/zxgg_detail.asp?id=376")
     print ret;
     #ret = sql_check.run("http://www.chinaxinge.com/company/skin/12/index.asp?id=7798")
     #print ret;
@@ -49,12 +51,17 @@ def test_port_scan():
 
 #测试小爬虫
 def test_spider():
-    s = Spider.Spider("http://www.sunbridgegroup.com",50);
-    s.craw()
+    s = Spider.Spider("http://www.szxcc.com/gb/",10);
+    ret = s.craw()
+    for url in ret:
+        ret = sql_check.run(url)
+        if(ret is True):
+            break;
+
 if __name__ == '__main__':
     #test_get_domain()
     #test_get_post_request_info()
-    test_cdn_check()
+    #test_cdn_check()
     #test_port_scan()
-    #test_spider()
+    test_spider()
     #test_sql_check()

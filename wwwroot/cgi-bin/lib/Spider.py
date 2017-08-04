@@ -75,8 +75,9 @@ class Spider:
             for thread in threads:
                 thread.join()
             for _str in contents:
-                if _str is None:
+                if _str is None or _str.has_key('html') is False:
                     continue
+                print _str
                 new_urls = self._get_new_urls(new_url,_str['html'])
                 self.urls.add_new_urls(new_urls)
         print "爬取完毕,将结果返回"
