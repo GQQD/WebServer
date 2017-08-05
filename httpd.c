@@ -5,24 +5,39 @@
 *开发环境:Kali Linux/g++ v6.3.0
 ****************************************/
 #include"httpd.h"
-static const char* respond_line = "HTTP/1.0 200 OK\r\nContent-type:text/html\r\n";
+static const char* respond_line = "HTTP/1.0 200 OK\r\n";
+
+static const char* content_type_html = "Content-type:text/html\r\n";
+static const char* content_type_css = "Content-type:text/css\r\n";
+static const char* content_type_jpg = "Content-type:image/jpeg\r\n";
+static const char* content_type_gif = "Content-type:image/gif\r\n";
+static const char* content_type_png = "Content-type:image/png\r\n";
+
 static const char* blank_line = "\r\n";
 static const char* states_404 = "HTTP/1.0 404 not found\r\n";
 void handler(int sig){
 	printf("get a sig %d\n",sig);
 }
 
+void send_content_type(int sock,char *path){
+	const char *ret = NULL;
+	if(strstr(path,".gif")){
+		ret = content_type_gif;
+	}else if(strstr(path,".jpg")){
+		ret = content_type_jpg;
+	}else if(strstr(path,".css")){
+		ret = content_type_css;
+	}else if(strstr(path,".png")){
+		ret = content_type_png;
+	}else{
+		ret = content_type_html;
+	}
+	if(send(sock,ret,strlen(ret),0) < 0){
+		perror("send content type fail");
+	}
+}
 //检测客户端是否在线(处于连接状态)
 int check_sock_connected(int sock){
-	/*
-	struct tcp_info info;
-	socklen_t len = sizeof(info);
-	getsockopt(sock,IPPROTO_TCP,TCP_INFO,&info,&len);
-	if(info.tcpi_state == TCP_ESTABLISHED){
-		return 1;
-	}
-	return 0;
-	*/
 	return 1;
 }
 //CGI处理
@@ -111,10 +126,11 @@ void exec_cgi(int sock,char *method,char *path){
 		printf("father:%s is written in pipe\n",query_string);
 		//从管道中读出信息发送给client	
 		send(sock,respond_line,strlen(respond_line),0);
+		send(sock,content_type_html,strlen(content_type_html),0);
 		send(sock,blank_line,strlen(blank_line),0);
 		ssize_t s = 0;
 		do{
-			s = read(output[0],buff,sizeof(buff));
+			s = read(output[0],buff,sizeof(buff)-1);
 			buff[s] = 0;
 			send(sock,buff,s,0);
 			printf("buff is %s",buff);
@@ -135,25 +151,30 @@ void handle_simple_get(int sock,char *path,int size){
 		ret = get_line(sock,buff,sizeof(buff));
 		printf("ret = %d,I get some data:%s",ret,buff);
 	}while(ret!=1&&ret!=0);
-	int state= check_sock_connected(sock);		
-	if(state && send(sock,respond_line,strlen(respond_line),0) < 0){
+	
+	if(send(sock,respond_line,strlen(respond_line),0) < 0){
 		perror("send respond_line fail:");
 		return ;	
 	}
-	state = check_sock_connected(sock);
-	if(state && send(sock,blank_line,strlen(blank_line),0) < 0){
+	send_content_type(sock,path);
+	if(send(sock,blank_line,strlen(blank_line),0) < 0){
 		perror("blank_line fail:");
 		return ;
 	}
+	char *tmp = strchr(path,'?');
+	if(tmp!=NULL){
+		*tmp = '\0';
+	}
+	
+	
 	//打开请求文件
 	int fd = open(path,O_RDONLY);
 	if(fd < 0){
 		perror("handle_simple_get:open");
 		goto end;
 	}
-	state = check_sock_connected(sock);
 	//发送数据
-	if(state && sendfile(sock,fd,NULL,size) < 0){
+	if(sendfile(sock,fd,NULL,size) < 0){
 		perror("handle_simple_get:sendfile");
 	}
 	printf("数据发送完毕,并关闭fd\n");
@@ -295,7 +316,12 @@ void handle_http_request(int sock){
 		handle_simple_get(sock,full_path,file_info.st_size);
 		return ;
 	}
-	if(strchr(path,'?')!=NULL && strchr(path,'=')==NULL){	
+	if(strcasecmp(method,"GET")==0 && strchr(path,'?')!=NULL && strstr(path,".html")){
+		printf("GET请求带参数,后缀为.html");
+		handle_simple_get(sock,full_path,file_info.st_size);
+		return ;
+	}
+	if(strcasecmp(method,"GET")==0 && strchr(path,'?')!=NULL && strchr(path,'=')==NULL){	
 		//虽然GET请求中存在?但不存在=,仍然当作简单请求处理.
 		printf("带?但不带=\n");
 		handle_simple_get(sock,full_path,file_info.st_size);

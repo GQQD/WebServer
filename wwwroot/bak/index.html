@@ -1,0 +1,135 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- 上述3个meta标签*必须*放在最前面，任何其他内容都*必须*跟随其后！ -->
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="../../favicon.ico">
+    <title>高小调</title>
+    <!-- Bootstrap core CSS -->
+    <link href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+    <link href="http://v3.bootcss.com/assets/css/ie10-viewport-bug-workaround.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="http://v3.bootcss.com/examples/offcanvas/offcanvas.css" rel="stylesheet">
+
+    <!-- Just for debugging purposes. Don't actually copy these 2 lines! -->
+    <!--[if lt IE 9]><script src="../../assets/js/ie8-responsive-file-warning.js"></script><![endif]-->
+    <script src="http://v3.bootcss.com/assets/js/ie-emulation-modes-warning.js"></script>
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://cdn.bootcss.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+      <script src="https://cdn.bootcss.com/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+
+  <body>
+    <nav class="navbar navbar-fixed-top navbar-inverse">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="http://gaoxiaodiao.com">高小调</a>
+        </div>
+        <div id="navbar" class="collapse navbar-collapse">
+          <ul class="nav navbar-nav">
+            <li class="active"><a href="#">Home</a></li>
+            <li><a href="http://blog.gaoxiaodiao.com">Blog</a></li>
+          </ul>
+        </div><!-- /.nav-collapse -->
+      </div><!-- /.container -->
+    </nav><!-- /.navbar -->
+
+    <div class="container">
+
+      <div class="row row-offcanvas row-offcanvas-right">
+
+        <div class="col-xs-12 col-sm-9">
+          <p class="pull-right visible-xs">
+            <button type="button" class="btn btn-primary btn-xs" data-toggle="offcanvas">Toggle nav</button>
+          </p>
+          <div class="jumbotron">
+            <h1>高小调</h1>
+            <p>欢迎来到我的个人主页,下面是我几个博客,右边是我常去的网站.</p>
+          </div>
+          <div class="row">
+		  <div class="col-xs-6 col-lg-4">
+              <h2>个人独立博客</h2>
+              <p>内容较杂,主要记录了初期深入学习C语言的相关信息.<br>一直对UI不满意,因此很久没有更新了.</p>
+              <p><a class="btn btn-default" href="http://blog.gaoxiaodiao.com" role="button" target="_black">View details &raquo;</a></p>
+            </div>
+		    <div class="col-xs-6 col-lg-4">
+              <h2>C/C++专题</h2>
+              <p>博客园小号之一,<br>主要用来总结C/C++相关知识.</p>
+              <p><a class="btn btn-default" href="http://www.cnblogs.com/qq329914874/" role="button" target="_black">View details &raquo;</a></p>
+            </div>
+			<div class="col-xs-6 col-lg-4">
+              <h2>数据结构专题</h2>
+              <p>博客园小号之一,<br>主要练习/记录数据结构相关代码,后来代码练习转移到了github.</p>
+              <p><a class="btn btn-default" href="http://www.cnblogs.com/shujujiegou/" role="button" target="_black">View details &raquo;</a></p>
+            </div>
+			<div class="col-xs-6 col-lg-4">
+              <h2>Linux专题</h2>
+              <p>博客园小号之一,<br>主要用来记录/总结Linux系统编程、网络编程相关知识.</p>
+              <p><a class="btn btn-default" href="http://www.cnblogs.com/caolicangzhu/" role="button" target="_black">View details &raquo;</a></p>
+            </div>
+			<div class="col-xs-6 col-lg-4">
+              <h2>MyGithub</h2>
+              <p>Github虽然不属于博客范畴,<br>但记录了我敲的大部分代码.</p>
+              <p><a class="btn btn-default" href="https://github.com/gaoxiaodiao" role="button" target="_black">View details &raquo;</a></p>
+            </div>
+			<div class="col-xs-6 col-lg-4">
+				<h2>WebScan</h2>
+				<form method="POST" action="/cgi-bin/python.py">
+					url:<input type="text" name="url"><br>
+			 email:<input type="text" name="email">
+			 <input type="submit" value="提交">
+				</form> 	 
+			</div>
+
+          </div><!--/row-->
+        </div><!--/.col-xs-12.col-sm-9-->
+
+        <div class="col-xs-6 col-sm-3 sidebar-offcanvas" id="sidebar">
+          <div class="list-group">
+			<a href="http://www.liaoxuefeng.com/" class="list-group-item" target="_black">廖雪峰</a>
+			<a href="http://www.williamlong.info/" class="list-group-item" target="_black">月光博客</a>
+			<a href="http://lusongsong.com/" class="list-group-item" target="_black">卢松松博客</a>
+			<a href="https://github.com/" class="list-group-item" target="_black">Github</a>
+			<a href="http://www.cnblogs.com/" class="list-group-item" target="_black">博客园</a>
+            <a href="http://www.csdn.net/" class="list-group-item" target="_black">CSDN</a>
+			<a href="http://www.51cto.com/" class="list-group-item" target="_black">51CTO</a>
+            <a href="http://bbs.pediy.com/" class="list-group-item" target="_black">看雪论坛</a>
+          </div>
+        </div><!--/.sidebar-offcanvas-->
+      </div><!--/row-->
+
+      <hr>
+
+      <footer>
+        <p>&copy; Company 2014</p>
+      </footer>
+
+    </div><!--/.container-->
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="https://cdn.bootcss.com/jquery/1.12.4/jquery.min.js"></script>
+    <script>window.jQuery || document.write('<script src="../../assets/js/vendor/jquery.min.js"><\/script>')</script>
+    <script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+    <script src="http://v3.bootcss.com/assets/js/ie10-viewport-bug-workaround.js"></script>
+    <script src="http://v3.bootcss.com/examples/offcanvas/offcanvas.js"></script>
+  </body>
+</html>

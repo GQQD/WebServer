@@ -18,6 +18,7 @@
 #include<fcntl.h>
 #include<sys/sendfile.h>
 int get_listen_sock(int port);
+void send_content_type(int sock,char *path);
 int get_line(int sock,char *buff,int size);
 void exec_cgi(int sock,char* method,char *path);
 void send_error(int sock,int error_code);
