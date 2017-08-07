@@ -12,6 +12,7 @@ int main(int argc,const char * argv[]){
 		printf("Usage:%s [port]\n",argv[0]);
 		return 1;
 	}
+	daemon(1,0);
 	int listen_sock = get_listen_sock(atoi(argv[1]));
 	int epfd = epoll_create(256);
 	if(epfd < 0){
