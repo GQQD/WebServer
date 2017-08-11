@@ -12,6 +12,7 @@ import requests
 from sys import argv
 from lib import Spider
 from modules import sql_check
+from modules import webcms_check
 #测试检查页面是否存在sql注入
 def test_sql_check():
     #ret = sql_check.run("http://www.hbxffy1.com/info/dispnews.asp?id=1709")
@@ -57,11 +58,14 @@ def test_spider():
         ret = sql_check.run(url)
         if(ret is True):
             break;
-
+#测试WebCMS指纹识别
+def test_webcms_check():
+    cms_check = webcms_check.webcms("http://www.szxcc.com/gb/") 
 if __name__ == '__main__':
     #test_get_domain()
     #test_get_post_request_info()
     #test_cdn_check()
     #test_port_scan()
-    test_spider()
+    #test_spider()
     #test_sql_check()
+    test_webcms_check()

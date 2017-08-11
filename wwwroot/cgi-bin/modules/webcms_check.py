@@ -72,4 +72,3 @@ class webcms(object):
                     #此处可以进行输出
                 else:
                     print "[webcms]:%s cms NOTFound!"%self.URL
-
