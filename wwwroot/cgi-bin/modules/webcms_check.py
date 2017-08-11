@@ -53,7 +53,7 @@ class webcms(object):
                 self.NotFound = False
                 return True
         else:
-            md5 = self.getmd5(html)
+            md5 = self.md5(html)
             if(md5 == cms["md5"]):
                 self.result = cms["name"]
                 self.NotFound = False
