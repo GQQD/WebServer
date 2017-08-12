@@ -30,8 +30,10 @@ class Downloader:
         try:
             r = requests.post(url,data)
             encoding = requests.utils.get_encodings_from_content(r.content)
-            ret = r.content.decode(encoding[0]).encode('utf-8')
-            return ret
+            if(len(encoding)!=0):
+                ret = r.content.decode(encoding[0]).encode('utf-8')
+                return ret
+            return r.text
         except Exception,e:
             print Exception,":",e
     #将页面down下来,放到htmls中
