@@ -72,9 +72,10 @@ def test_webshell_check():
     ret = webshell_check.run("http://gaoxiaodiao.com/sasa.php")
     print ret
 def test_xss_check():
-    urls = xss_check.urlsplit("http://gaoxiaodiao.com/index.asp?id=1&cate=2&something=3");
-    for url in urls:
-        print url
+    #urls = xss_check.urlsplit("http://gaoxiaodiao.com/index.asp?id=1&cate=2&something=3");
+    #for url in urls:
+    #    print url
+    xss_check.run("http://gaoxiaodiao.com/index.asp?id=1")
 if __name__ == '__main__':
     #test_get_domain()
     #test_get_post_request_info()
