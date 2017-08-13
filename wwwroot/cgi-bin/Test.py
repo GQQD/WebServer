@@ -14,6 +14,7 @@ from lib import Spider
 from modules import sql_check
 from modules import webcms_check
 from lib import Downloader
+from modules import webshell_check
 #测试检查页面是否存在sql注入
 def test_sql_check():
     #ret = sql_check.run("http://www.hbxffy1.com/info/dispnews.asp?id=1709")
@@ -65,6 +66,10 @@ def test_webcms_check():
     cms_check.run()
     #down = Downloader.Downloader()
     #print down.get("http://www.szxcc.com/gb/install/")
+#测试webshell_check
+def test_webshell_check():
+    ret = webshell_check.run("http://gaoxiaodiao.com/sasa.php")
+    print ret
 if __name__ == '__main__':
     #test_get_domain()
     #test_get_post_request_info()
@@ -72,4 +77,5 @@ if __name__ == '__main__':
     #test_port_scan()
     #test_spider()
     #test_sql_check()
-    test_webcms_check()
+    #test_webcms_check()
+    test_webshell_check()
