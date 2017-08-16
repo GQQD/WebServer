@@ -40,6 +40,7 @@ def urlsplit(url):
 def run(url):
     downloader = Downloader.Downloader()
     urls = urlsplit(url)
+    found = False
     if urls is None:
         return False
     for _url in urls:
@@ -50,6 +51,8 @@ def run(url):
             if html is None:
                 continue
             if(html.find(xss_code)!=-1):
-                print "[xss_check]xss found:%s"%xss_test_url
+                print "[xss_found]%s"%xss_test_url
+                found = True
+    if found is False:
+        print "[xss_check]no xss!"
     return False
-    print "xss_check is running..." 
