@@ -78,9 +78,10 @@ def test_xss_check():
     #    print url
     xss_check.run("http://127.0.0.1/xss.php?code=1")
 def test_bak_check():
-    paths = bak_check.get_parent_paths("/a/b/c/d/e/f/g/")
-    for path in paths:
-        print(path)
+    #paths = bak_check.get_parent_paths("/a/b/c/d/e/f/g/")
+    #for path in paths:
+    #    print(path)
+    bak_check.run("http://gaoxiaodiao.com/a/b/c/d/e/f/g")
 if __name__ == '__main__':
     #test_get_domain()
     #test_get_post_request_info()
