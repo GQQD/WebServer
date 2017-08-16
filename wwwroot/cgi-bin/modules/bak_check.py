@@ -45,11 +45,18 @@ def run(url):
                 #网站子目录
                 for ext in DIR_PROBE_EXTS:
                     url = "%s://%s%s%s" % (urlobj.scheme,urlobj.netloc,path[:-1],ext)
-                   web_paths.append(url)
+                    web_paths.append(url)
             else:
                 #非目录
                 for ext in FILE_PROBE_EXTS:
                     url = "%s://%s%s%s"%(urlobj.scheme,urlobj.netloc,path,ext)
                     web_paths.append(url)
+    downloader = Downloader.Downloader()
+    found = False
     for path in web_paths:
-        print("[bak_check]:%s"%path)
+        #print("[bak_check]:%s"%path)
+        if((downloader.get(path) is not None)):
+            found = True
+            print("[bak_check]:bak found!%s"%path)
+    if found is False:
+        print ("[bak_check]:not found!")
