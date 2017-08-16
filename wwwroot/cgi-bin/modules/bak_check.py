@@ -27,3 +27,29 @@ def get_parent_paths(path):
         tmp = tmp[:-1]                      #tmp = /a/b/c/d
     return paths
 
+DIR_PROBE_EXTS = ['.tar.gz', '.zip', '.rar', '.tar.bz2']
+FILE_PROBE_EXTS = ['.bak', '.swp', '.1']
+
+def run(url):
+    urlobj = urlparse.urlparse(url)
+    paths = get_parent_paths(urlobj.path)
+    web_paths = []
+    for path in paths:
+        if path == '/':
+            #网站根目录
+            for ext in DIR_PROBE_EXTS:
+                url = "%s://%s%s%s" % (urlobj.scheme,urlobj.netloc,path,urlobj.netloc+ext)
+                web_paths.append(url)
+        else:
+            if path[-1] == '/':
+                #网站子目录
+                for ext in DIR_PROBE_EXTS:
+                    url = "%s://%s%s%s" % (urlobj.scheme,urlobj.netloc,path[:-1],ext)
+                   web_paths.append(url)
+            else:
+                #非目录
+                for ext in FILE_PROBE_EXTS:
+                    url = "%s://%s%s%s"%(urlobj.scheme,urlobj.netloc,path,ext)
+                    web_paths.append(url)
+    for path in web_paths:
+        print("[bak_check]:%s"%path)
