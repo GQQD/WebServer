@@ -16,6 +16,7 @@ from modules import webcms_check
 from lib import Downloader
 from modules import webshell_check
 from modules import xss_check
+from modules import bak_check
 #测试检查页面是否存在sql注入
 def test_sql_check():
     #ret = sql_check.run("http://www.hbxffy1.com/info/dispnews.asp?id=1709")
@@ -75,7 +76,11 @@ def test_xss_check():
     #urls = xss_check.urlsplit("http://gaoxiaodiao.com/index.asp?id=1&cate=2&something=3");
     #for url in urls:
     #    print url
-    xss_check.run("http://gaoxiaodiao.com/index.asp?id=1")
+    xss_check.run("http://127.0.0.1/xss.php?code=1")
+def test_bak_check():
+    paths = bak_check.get_parent_paths("/a/b/c/d/e/f/g/")
+    for path in paths:
+        print(path)
 if __name__ == '__main__':
     #test_get_domain()
     #test_get_post_request_info()
@@ -85,4 +90,5 @@ if __name__ == '__main__':
     #test_sql_check()
     #test_webcms_check()
     #test_webshell_check()
-    test_xss_check()
+    #test_xss_check()
+    test_bak_check()
