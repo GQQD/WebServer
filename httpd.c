@@ -6,19 +6,18 @@
 ****************************************/
 #include"httpd.h"
 static const char* respond_line = "HTTP/1.0 200 OK\r\n";
-
 static const char* content_type_html = "Content-type:text/html\r\n";
 static const char* content_type_css = "Content-type:text/css\r\n";
 static const char* content_type_jpg = "Content-type:image/jpeg\r\n";
 static const char* content_type_gif = "Content-type:image/gif\r\n";
 static const char* content_type_png = "Content-type:image/png\r\n";
-
 static const char* blank_line = "\r\n";
 static const char* states_404 = "HTTP/1.0 404 not found\r\n";
+
 void handler(int sig){
 	printf("get a sig %d\n",sig);
 }
-
+//简单的对content-type进行识别（可以直接从请求报文中获取）
 void send_content_type(int sock,char *path){
 	const char *ret = NULL;
 	if(strstr(path,".gif")){
@@ -35,10 +34,6 @@ void send_content_type(int sock,char *path){
 	if(send(sock,ret,strlen(ret),0) < 0){
 		perror("send content type fail");
 	}
-}
-//检测客户端是否在线(处于连接状态)
-int check_sock_connected(int sock){
-	return 1;
 }
 //CGI处理
 void exec_cgi(int sock,char *method,char *path){
@@ -240,7 +235,9 @@ void handle_http_request(int sock){
 	//拿到http请求头信息 GET / HTTP/1.0
 	if(get_line(sock,buff,sizeof(buff)) == -1){
 		printf("没有请求任何信息\n");
-		goto end;
+		//暂且当作404去处理
+		send_error(sock,404);
+		return ;	
 	}
 	char *method = buff;
 	char *tmp = buff;
@@ -270,9 +267,11 @@ void handle_http_request(int sock){
 	
 	if(strcasecmp(method,"GET")!=0 && strcasecmp(method,"POST")!=0){
 		//既不是GET请求,也不是POST请求
-		error_code = 400;	//请求无效
-		goto end;
+		//暂且当作404去处理
+		send_error(sock,404);
+		return ;
 	}
+
 
 	//full_path:完整带参数的文件路径
 	char full_path[128] = {0};
@@ -330,10 +329,6 @@ void handle_http_request(int sock){
 	printf("need cgi!\n");
 	//GET请求带参数(一定存在=) 或者 POST请求,需要用到CGI
 	exec_cgi(sock,method,full_path);
-end:
-	printf("enddddddddddddddddddd\n");
-	//send_error(sock,error_code);
-	return ;
 }
 
 //发送错误码
@@ -353,6 +348,113 @@ void send_error(int sock,int error_code){
 	send(sock,buff,strlen(buff),0);
 }
 
+//通过线程处理http请求
 void* thread_handle_http_request(void* arg){
+	//分离参数
+	int sock = ((struct thread_arg*)arg)->sock;
+	int epfd = ((struct thread_arg*)arg)->epfd;
+	struct epoll_event event = ((struct thread_arg*)arg)->event;
 
+	char buff[1024];
+	int error_code = 500;
+	//拿到http请求头信息 GET / HTTP/1.0
+	if(get_line(sock,buff,sizeof(buff)) == -1){
+		printf("没有请求任何信息\n");
+		//暂且当作404去处理
+		send_error(sock,404);
+		goto end;	
+	}
+	char *method = buff;
+	char *tmp = buff;
+	char *path = NULL;
+	//提取method GET 或 POST
+	while(*tmp!=' '){
+		++tmp;
+	}
+	*tmp = '\0';
+	++tmp;
+	while(*tmp == ' '){
+		++tmp;
+	}
+	printf("method:%s\n",method);
+	//path:不带web根目录的路径
+	path = tmp;
+	while(*tmp!=' '){
+		++tmp;
+	}
+	*tmp = '\0';
+	--tmp;
+	if(*tmp == '/'){
+		//如果请求的是 / ,则为其添加默认首页
+		sprintf(path,"%sindex.html",path);
+	}
+	printf("path:%s\n",path);
+	
+	if(strcasecmp(method,"GET")!=0 && strcasecmp(method,"POST")!=0){
+		//既不是GET请求,也不是POST请求
+		//暂且当作404去处理
+		send_error(sock,404);
+		goto end;
+	}
+
+
+	//full_path:完整带参数的文件路径
+	char full_path[128] = {0};
+	sprintf(full_path,"wwwroot%s",path);
+	printf("full_path:%s\n",full_path);
+	
+	//really_path:完整无参的文件路径
+	char really_path[128] = {0};
+	sprintf(really_path,"wwwroot%s",path);
+	tmp = strchr(really_path,'?');	
+	if(tmp!=NULL)
+		*tmp = '\0';
+	printf("really_path:%s\n",really_path);
+	
+	//对请求文件进行检测
+	struct stat file_info;
+	if(stat(really_path,&file_info) < 0){
+		//文件不存在,返回404状态码
+		printf("文件不存在,返回404\n");
+		send_error(sock,404);
+		goto end;
+	}
+	if(S_ISDIR(file_info.st_mode)){
+		//当前请求的为目录,则为其加上首页
+		sprintf(full_path,"%s/index.html",full_path);
+		printf("当前请求的为目录,新的full_path为%s\n",full_path);
+	}
+	
+	if(file_info.st_mode & S_IXOTH){
+		//当前请求存在可执行权限
+		//printf("path=%s\n",path);
+		printf("可执行权限,nedd cgi\n");
+		exec_cgi(sock,method,full_path);
+		goto end;
+	}	
+	//GET POST GET带参数
+	if(strcasecmp(method,"GET")==0 && strchr(path,'?')==NULL){
+		//GET请求 且 不带参数
+		printf("GET请求且不带参数\n");
+		handle_simple_get(sock,full_path,file_info.st_size);
+		goto end;
+	}
+	if(strcasecmp(method,"GET")==0 && strchr(path,'?')!=NULL && strstr(path,".html")){
+		printf("GET请求带参数,后缀为.html");
+		handle_simple_get(sock,full_path,file_info.st_size);
+		goto end;
+	}
+	if(strcasecmp(method,"GET")==0 && strchr(path,'?')!=NULL && strchr(path,'=')==NULL){	
+		//虽然GET请求中存在?但不存在=,仍然当作简单请求处理.
+		printf("带?但不带=\n");
+		handle_simple_get(sock,full_path,file_info.st_size);
+		goto end;
+	}
+	printf("need cgi!\n");
+	//GET请求带参数(一定存在=) 或者 POST请求,需要用到CGI
+	exec_cgi(sock,method,full_path);
+end:
+	//http请求处理完毕,关闭连接
+	close(sock);
+	epoll_ctl(epfd,EPOLL_CTL_DEL,sock,&event);
 }

@@ -28,4 +28,3 @@ msg += "CDN:" + cdn_msg + "\n"
 handle = send_email.Email()
 handle.login()
 handle.send("805888196@qq.com",msg)
-

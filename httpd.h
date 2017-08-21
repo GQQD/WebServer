@@ -31,7 +31,7 @@ void handler(int sig);
 struct thread_arg{
 	int epfd;
 	int sock;
-	struct epoll_event *event;
+	struct epoll_event event;
 };
 
 void* thread_handle_http_request(void*);
