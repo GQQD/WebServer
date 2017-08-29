@@ -35,7 +35,8 @@ class webcms(object):
     def thread_what_web(self):
         if(self.work_queue.empty() and self.NotFound is not False):
             self.NotFound = False
-            print "[webcms_check] Not Found!"
+            #print "[webcms_check] Not Found!"
+            print("未知")
             return False 
         if(self.NotFound is False):
             return False
@@ -50,14 +51,15 @@ class webcms(object):
             if(html.find(tmp) != -1):
                 self.result = cms["name"]
                 self.NotFound = False
-                print "[webcms_check]cms is"%(cms["name"])
+                #print "[webcms_check]cms is"%(cms["name"])
+                print(cms["name"])
                 return True
         else:
             md5 = self.md5(html)
             if(md5 == cms["md5"]):
                 self.result = cms["name"]
                 self.NotFound = False
-                print "[webcms_check]cms is"%(cms["name"])
+                print(cms["name"])
                 return True
 
     def run(self):
@@ -70,5 +72,5 @@ class webcms(object):
             for t in th:
                 t.join()
             if(self.result):
-                print "[webcms]:%s cms is %s"%(self.url,self.result)
+                print(cms["name"])
                 #此处可以进行输

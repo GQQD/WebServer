@@ -34,13 +34,13 @@ def run(url):
     if(content is None):
         #print "页面无法打开,请检查网络"
         return False
-    print "网站打开完毕"
+    #print "网站打开完毕"
     for (dbms,regex) in ((dbms,regex) for dbms in DBMS_ERRORS for regex in DBMS_ERRORS[dbms]):
         #print dbms
         #print regex
         ret = re.search(regex,content)
         if(ret):
-            print "当前网站存在漏洞dbms为",dbms    
+            #print "当前网站存在漏洞dbms为",dbms    
             return True
-    print "扫描完毕,该url无sql漏洞"
+    #print "扫描完毕,该url无sql漏洞"
     return False

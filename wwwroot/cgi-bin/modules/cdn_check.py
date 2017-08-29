@@ -54,7 +54,7 @@ def run(url):
     post_ret = s.post("http://ce.cloud.360.cn/task",data=request_info)
     if(post_ret.status_code!=200):
         #print "[cdn_detector]:task post failure,status code is " + str(post_ret.status_code)
-        return error_msg,False
+        return False
     #else:
         #print "[cdn_detector]:task post successful!"
     request_header = {
@@ -65,7 +65,7 @@ def run(url):
     post_ret = s.post("http://ce.cloud.360.cn/Tasks/detect",data=request_info,headers=request_header)
     if(post_ret.status_code != 200):
         #print "<p>[cdn_detector]:detect post failure,status code is " + str(post_ret.statuc_code)
-        return error_msg,False
+        return False
     #else:
         #print "[cdn_detector]:detect post successful"
     #延时6秒,为了让远端主机有尽可能多的时间去探测目的主机
@@ -86,10 +86,10 @@ def run(url):
     ans = list(set(ips))
     
     if not len(ips):
-        return error_msg,False
+        return False
     #success_msg = url;
     #success_msg += '[CDN FOUND!]' if len(ans) > 1 else ''
     #success_msg += 'Nodes:' + str(len(ips))
-    success_msg += '(%s)' % str(len(ans)) + ' '.join(ans)
-    return success_msg,True
+    #success_msg += '(%s)' % str(len(ans)) + ' '.join(ans)
+    return True
 

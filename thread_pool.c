@@ -54,7 +54,7 @@ threadpool_t *threadpool_create(int min_thr_num, int max_thr_num, int queue_max_
         /* 启动 min_thr_num 个 work thread */
         for (i = 0; i < min_thr_num; i++) {
             pthread_create(&(pool->threads[i]), NULL, threadpool_thread, (void *)pool);/*pool指向当前线程池*/
-            printf("start thread 0x%x...\n", (unsigned int)pool->threads[i]);
+            //printf("start thread 0x%x...\n", (unsigned int)pool->threads[i]);
         }
         pthread_create(&(pool->adjust_tid), NULL, adjust_thread, (void *)pool);/* 启动管理者线程 */
 
@@ -82,7 +82,7 @@ int threadpool_add(threadpool_t *pool, void*(*function)(void *arg), void *arg)
 
     /* 清空 工作线程 调用的回调函数 的参数arg */
     if (pool->task_queue[pool->queue_rear].arg != NULL) {
-        free(pool->task_queue[pool->queue_rear].arg);
+        //free(pool->task_queue[pool->queue_rear].arg);
         pool->task_queue[pool->queue_rear].arg = NULL;
     }
     /*添加任务到任务队列里*/
@@ -149,7 +149,7 @@ void *threadpool_thread(void *threadpool)
         pthread_mutex_unlock(&(pool->lock));
 
         /*执行任务*/ 
-        printf("thread 0x%x start working\n", (unsigned int)pthread_self());
+        //printf("thread 0x%x start working\n", (unsigned int)pthread_self());
         pthread_mutex_lock(&(pool->thread_counter));                            /*忙状态线程数变量琐*/
         pool->busy_thr_num++;                                                   /*忙状态线程数+1*/
         pthread_mutex_unlock(&(pool->thread_counter));
@@ -157,7 +157,7 @@ void *threadpool_thread(void *threadpool)
         //task.function(task.arg);                                              /*执行回调函数任务*/
 
         /*任务结束处理*/ 
-        printf("thread 0x%x end working\n", (unsigned int)pthread_self());
+        //printf("thread 0x%x end working\n", (unsigned int)pthread_self());
         pthread_mutex_lock(&(pool->thread_counter));
         pool->busy_thr_num--;                                       /*处理掉一个任务，忙状态数线程数-1*/
         pthread_mutex_unlock(&(pool->thread_counter));

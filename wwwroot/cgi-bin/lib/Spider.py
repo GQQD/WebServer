@@ -65,7 +65,7 @@ class Spider:
                 new_url = self.urls.get_new_url()
                 ###############爬虫执行动作#####################
                 if(new_url.find("?") != -1):
-                    print "[Spider]",new_url
+                    #print "[Spider]",new_url
                     dynamic_url.add(new_url)
                     #sql_check.run(new_url)
                 ################################################
@@ -77,8 +77,8 @@ class Spider:
             for _str in contents:
                 if _str is None or _str.has_key('html') is False:
                     continue
-                print _str
+                #print _str
                 new_urls = self._get_new_urls(new_url,_str['html'])
                 self.urls.add_new_urls(new_urls)
-        print "爬取完毕,将结果返回"
+        #print "爬取完毕,将结果返回"
         return dynamic_url

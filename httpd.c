@@ -207,16 +207,19 @@ int get_line(int sock,char *buff,int size){
 	while(index<size &&ch!='\n'){
 		if(recv(sock,&ch,1,0) == 0){
 			//客户端断开连接
+			printf("1.recv(%d,&ch,1,0)\n",sock);
 			return -1;
 		}
 		if(ch == '\r'){
 			if(recv(sock,&ch,1,MSG_PEEK) == 0){
 				//客户端断开连接
+				printf("2.recv(%d,&ch,1,MSG_PEEK)\n",sock);
 				return -1;
 			}
 			if(ch == '\n'){
 				if(recv(sock,&ch,1,0) == 0){
 					//客户端断开链接
+					printf("3.recv(%d,&ch,1,0)\n",sock);
 					return -1;
 				}
 			}else{
@@ -338,11 +341,7 @@ void send_error(int sock,int error_code){
 	ssize_t ret;
 	do{
 		ret = get_line(sock,buff,sizeof(buff));
-	}while(ret!=1&&ret!=0);
-	sprintf(buff,"HTTP/1.0 %d %s\r\n",error_code,"not found");
-	sprintf(buff,"\r\n");
-	sprintf(buff,"404 NotFound");
-	printf("404buff is %s",buff);
+	}while(ret!=1&&ret!=-1);
 	send(sock,states_404,strlen(states_404),0);
 	send(sock,blank_line,strlen(blank_line),0);
 	send(sock,buff,strlen(buff),0);
@@ -354,21 +353,26 @@ void* thread_handle_http_request(void* arg){
 	int sock = ((struct thread_arg*)arg)->sock;
 	int epfd = ((struct thread_arg*)arg)->epfd;
 	struct epoll_event event = ((struct thread_arg*)arg)->event;
-
+	
 	char buff[1024];
-	int error_code = 500;
 	//拿到http请求头信息 GET / HTTP/1.0
 	if(get_line(sock,buff,sizeof(buff)) == -1){
-		printf("没有请求任何信息\n");
+		printf("%d,没有请求任何信息\n",sock);
 		//暂且当作404去处理
 		send_error(sock,404);
 		goto end;	
 	}
+
+	//打印线程id及处理的sock
+	printf("0x%x_%d,buff=%s",pthread_self(),sock,buff);
+	//send_error(sock,404);
+	goto end;
+	
 	char *method = buff;
 	char *tmp = buff;
 	char *path = NULL;
 	//提取method GET 或 POST
-	while(*tmp!=' '){
+	while(tmp!=NULL&&*tmp!='\0'&&*tmp!=' '){
 		++tmp;
 	}
 	*tmp = '\0';
@@ -376,7 +380,7 @@ void* thread_handle_http_request(void* arg){
 	while(*tmp == ' '){
 		++tmp;
 	}
-	printf("method:%s\n",method);
+	printf("%d:method:%s\n",sock,method);
 	//path:不带web根目录的路径
 	path = tmp;
 	while(*tmp!=' '){
@@ -388,7 +392,7 @@ void* thread_handle_http_request(void* arg){
 		//如果请求的是 / ,则为其添加默认首页
 		sprintf(path,"%sindex.html",path);
 	}
-	printf("path:%s\n",path);
+	printf("%d:path:%s\n",sock,path);
 	
 	if(strcasecmp(method,"GET")!=0 && strcasecmp(method,"POST")!=0){
 		//既不是GET请求,也不是POST请求
@@ -397,11 +401,10 @@ void* thread_handle_http_request(void* arg){
 		goto end;
 	}
 
-
 	//full_path:完整带参数的文件路径
 	char full_path[128] = {0};
 	sprintf(full_path,"wwwroot%s",path);
-	printf("full_path:%s\n",full_path);
+	printf("%d:full_path:%s\n",sock,full_path);
 	
 	//really_path:完整无参的文件路径
 	char really_path[128] = {0};
@@ -409,7 +412,7 @@ void* thread_handle_http_request(void* arg){
 	tmp = strchr(really_path,'?');	
 	if(tmp!=NULL)
 		*tmp = '\0';
-	printf("really_path:%s\n",really_path);
+	printf("%d:really_path:%s\n",sock,really_path);
 	
 	//对请求文件进行检测
 	struct stat file_info;
@@ -435,7 +438,7 @@ void* thread_handle_http_request(void* arg){
 	//GET POST GET带参数
 	if(strcasecmp(method,"GET")==0 && strchr(path,'?')==NULL){
 		//GET请求 且 不带参数
-		printf("GET请求且不带参数\n");
+		printf("%d:GET请求且不带参数\n",sock);
 		handle_simple_get(sock,full_path,file_info.st_size);
 		goto end;
 	}
@@ -456,5 +459,4 @@ void* thread_handle_http_request(void* arg){
 end:
 	//http请求处理完毕,关闭连接
 	close(sock);
-	epoll_ctl(epfd,EPOLL_CTL_DEL,sock,&event);
 }

@@ -17,6 +17,7 @@
 #include<string.h>
 #include<fcntl.h>
 #include<sys/sendfile.h>
+#include<pthread.h>
 int get_listen_sock(int port);
 void send_content_type(int sock,char *path);
 int get_line(int sock,char *buff,int size);

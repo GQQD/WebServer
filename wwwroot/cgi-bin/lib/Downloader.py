@@ -23,7 +23,10 @@ class Downloader:
             if(r.status_code == 404):
                 return None;
             if len(encoding)!=0:
-                ret = r.content.decode(encoding[0]).encode('utf-8')
+                if encoding[0] == 'utf-8':
+                    ret = r.content
+                else:
+                    ret = r.content.decode(encoding[0]).encode('utf-8')
             return ret
         except Exception,e:
             print Exception,":",e
