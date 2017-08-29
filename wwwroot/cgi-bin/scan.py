@@ -1,9 +1,9 @@
 #!/usr/bin/python
 #coding=utf-8
 """
-*文件说明:测试各种函数
+*文件说明:扫描整合
 *作者:高小调
-*创建时间:2017年07月27日 星期四 16时15分18秒
+*创建时间:2017年08月29日 星期四 14时20分8秒
 *开发环境:Kali Linux/Python v2.7.13
 """
 from modules import cdn_check
@@ -19,14 +19,55 @@ from modules import xss_check
 from modules import bak_check
 import socket
 import urlparse
-#测试检查页面是否存在sql注入
-def test_sql_check():
-    #ret = sql_check.run("http://www.hbxffy1.com/info/dispnews.asp?id=1709")
-    #ret = sql_check.run("http://www.szxcc.com/gb/about1_xinxi.asp?id=325")
-    ret = sql_check.run("http://www.szxcc.com/gb/zxgg_detail.asp?id=376")
-    print(ret);
-    #ret = sql_check.run("http://www.chinaxinge.com/company/skin/12/index.asp?id=7798")
-    #print ret;
+from bs4 import BeautifulSoup
+import sys
+import re   
+import urllib2
+reload(sys)
+sys.setdefaultencoding('utf8')
+def search(key,limit=20):
+    page = 1
+    re_dict = {}
+    index = 1;
+    while page*10 <= limit:
+        if page == 1:
+            search_url='http://www.baidu.com/s?wd=key&rsv_bp=0&rsv_spt=3&rsv_n=2&inputT=6391'
+        else:
+            search_url='http://www.baidu.com/s?wd=key&rsv_bp=0&rsv_spt=3&rsv_n=2&inputT=6391&pn='+str((page-1)*10)
+        req=urllib2.urlopen(search_url.replace('key',key))   
+        html=req.read()
+        soup=BeautifulSoup(html,"html.parser")
+        linkpattern=re.compile("href=\"(.+?)\"")
+        div=soup.find('div',id='wrapper').find('div',id='wrapper_wrapper').find('div',id='container').find('div',id='content_left')
+        re_dict={}
+        start = 1
+        end = 10
+        if page > 1:
+            start = (page-1)*10+1
+            end = page*10
+        for i in range(start,end):
+            tmp1 = div.find('div',id=str(i))
+            if(tmp1 is None):
+                continue
+            tmp2 = tmp1.find('h3')
+            a = tmp2.find('a')
+            re_link=linkpattern.findall(str(a))
+            re_title=a.text
+            try:
+                r = requests.get(re_link[0],timeout=0.3)
+                re_dict[re_title]=r.url
+            except requests.exceptions.ConnectTimeout:
+                print(str(index) + ".%s 请求超时"%re_title)
+            except requests.exceptions.Timeout:
+                print(str(index) + ".%s 打开超时"%re_title)
+            except requests.exceptions.ConnectionError:
+                print(str(index) + ".%s 连接失败"%re_title)
+            except exceptions.Exception:
+                print(str(index) + ".%s 其他异常"%re_title)
+            print("%d-%s"%(i,re_title))
+            index += 1
+        page += 1
+    return re_dict
 
 def FullScan(url):
     #对url进行格式化
@@ -86,6 +127,7 @@ def SqlScan(url):
         print("网站地址不合法:域名为空!")
         return
     url = scheme + "://" + netloc + path
+    #进行sql漏洞检测
     spider = Spider.Spider(url,10)
     dynamic_urls = spider.craw()
     sql_urls = []
@@ -93,13 +135,19 @@ def SqlScan(url):
         if sql_check.run(dynamic_url) is True:
             sql_urls.append(dynamic_url)
     if len(sql_urls)==0:
-        print("不存在sql漏洞")
+        return False,None
     else:
-        print("以下url存在sql漏洞:%d"%len(sql_urls))
-        for sql_url in sql_urls:
-            print(sql_url)
+        return True,sql_urls
 if __name__ == '__main__':
-    if argv[1] == "0":
-        FullScan(str(argv[2]))
-    else:
-        SqlScan(str(argv[2]))
+    #if argv[1] == "0":
+    #    FullScan(str(argv[2]))
+    #else:
+    #    SqlScan(str(argv[2]))
+    dict_url = search("inurl:asp?id=",100)
+    for r in dict_url:
+        print(dict_url[r])
+        state,sql_urls=SqlScan(dict_url[r])
+        if state == True:
+            print(dict_url[r]+"存在sql漏洞")
+            for url in sql_urls:
+                print(url)
