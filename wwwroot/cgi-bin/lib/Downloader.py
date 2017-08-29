@@ -26,7 +26,7 @@ class Downloader:
                 if encoding[0] == 'utf-8':
                     ret = r.content
                 else:
-                    ret = r.content.decode(encoding[0]).encode('utf-8')
+                    ret = r.content.decode("gb18030").encode('utf-8')
             return ret
         except Exception,e:
             print Exception,":",e
@@ -47,13 +47,5 @@ class Downloader:
             return None;
         strs = {}
         strs["url"] = url
-        try:
-            r = requests.get(url,timeout=10)
-            encoding = requests.utils.get_encodings_from_content(r.content)
-            ret = r.content.decode(encoding[0]).encode('utf-8')
-            if r.status_code != 200:
-                return ret
-            strs["html"] = ret
-        except Exception,e:
-            print Exception,":",e
+        strs["html"] = self.get(url)
         htmls.append(strs)
