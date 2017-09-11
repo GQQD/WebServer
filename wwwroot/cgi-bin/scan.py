@@ -25,6 +25,8 @@ import re
 import urllib2
 reload(sys)
 sys.setdefaultencoding('utf8')
+import time
+#抓取百度搜索列表信息
 def search(key,limit=20):
     page = 1
     re_dict = {}
@@ -55,20 +57,26 @@ def search(key,limit=20):
             re_title=a.text
             try:
                 r = requests.get(re_link[0],timeout=0.3)
-                re_dict[re_title]=r.url
             except requests.exceptions.ConnectTimeout:
                 print(str(index) + ".%s 请求超时"%re_title)
+                break;
             except requests.exceptions.Timeout:
                 print(str(index) + ".%s 打开超时"%re_title)
+                break;
             except requests.exceptions.ConnectionError:
                 print(str(index) + ".%s 连接失败"%re_title)
+                break;
             except exceptions.Exception:
                 print(str(index) + ".%s 其他异常"%re_title)
-            print("%d-%s"%(i,re_title))
+                break;
+            
+                re_dicddt[re_title]=r.url
+            print("%d-%s-%s"%(i,re_title,r.url))
             index += 1
         page += 1
     return re_dict
 
+#全扫描
 def FullScan(url):
     #对url进行格式化
     url_info = urlparse.urlparse(url)
@@ -82,18 +90,32 @@ def FullScan(url):
         print("网站地址不合法:域名为空!")
         return
     url = scheme + "://" + netloc
+    '''
     #先进行CDN检测
-    cdn_exist = cdn_check.run(url)
+    start = time.time()
+    cdn_exist = False#cdn_check.run(url)
+    end = time.time()
+    #print "CDN检测耗时:%d"%(end-start)
     cdn = "不存在CDN"
-    if cdn_exist is True:
+    portinfo = ""
+    if cdn_exist == False:
         #不存在CDN,则进行端口扫描
+        start = time.time()
         ip = socket.gethostbyname(netloc)
-        port_scan.PortScan(ip)
+        ps = port_scan.PortScan("220.181.112.244")
+        portinfo = ps.run()
+        end = time.time()
+        #print "端口扫描耗时:%d"%(end-start)
     else:
         cdn = "存在CDN"
+    print cdn
+    print portinfo
     #爬虫抓取网站动态页面
+    start = time.time()
     spider = Spider.Spider(url,10)
     dynamic_urls = spider.craw()
+    end = time.time()
+    #print "爬取动态页面共耗时:%ds"%(end-start)
     sql="存在sql漏洞"
     xss="存在xss漏洞"
     sql_urls = []
@@ -107,13 +129,20 @@ def FullScan(url):
         sql = "无sql漏洞"
     if xss_urls is None:
         xss = "无xss漏洞"
+    '''
     #CMS指纹识别
+    start = time.time()
     cms_check = webcms_check.webcms(url,10)
     cms = cms_check.run()
+    end = time.time()
+    print "CMS指纹识别耗时:%ds"%(end-start)
+    '''
     print("CDN:"+cdn)
     print("sql:"+sql)
     print("xss:"+xss)
     print("webcms:"+cms)
+    '''
+#只进行sql漏洞扫描
 def SqlScan(url):
     #对url进行格式化
     url_info = urlparse.urlparse(url)
@@ -138,16 +167,18 @@ def SqlScan(url):
         return False,None
     else:
         return True,sql_urls
+
 if __name__ == '__main__':
     #if argv[1] == "0":
     #    FullScan(str(argv[2]))
     #else:
     #    SqlScan(str(argv[2]))
-    dict_url = search("inurl:asp?id=",100)
-    for r in dict_url:
-        print(dict_url[r])
-        state,sql_urls=SqlScan(dict_url[r])
-        if state == True:
-            print(dict_url[r]+"存在sql漏洞")
-            for url in sql_urls:
-                print(url)
+   # dict_url = search("inurl:asp?id=",100)
+   # for r in dict_url:
+   #     print(dict_url[r])
+   #     state,sql_urls=SqlScan(dict_url[r])
+   #     if state == True:
+   #         print(dict_url[r]+"存在sql漏洞")
+   #         for url in sql_urls:
+   #             print(url)
+   FullScan("http://www.sunbridgegroup.com/corporate_a.asp?id=4")

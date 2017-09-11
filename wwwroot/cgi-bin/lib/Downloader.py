@@ -28,8 +28,12 @@ class Downloader:
                 else:
                     ret = r.content.decode("gb18030").encode('utf-8')
             return ret
-        except Exception,e:
-            print Exception,":",e
+        except requests.exceptions.ConnectTimeout:
+            pass
+        except requests.exceptions.Timeout:
+            pass
+        except exceptions.Exception:
+            pass
     #post请求获取网页内容并返回
     def post(self,url,data):
         try:

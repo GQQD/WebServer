@@ -80,7 +80,7 @@ def run(url):
     #三次请求都未成功,探测失败
     if(post_ret.status_code!=200):
         #print "[cdn_detector]try three times already,i am angry,bye!"
-        return error_msg,False
+        return False
     #从响应的数据中提取ip
     ips = re.findall('"ip":"(.*?)"',post_ret.content)
     ans = list(set(ips))
@@ -91,5 +91,4 @@ def run(url):
     #success_msg += '[CDN FOUND!]' if len(ans) > 1 else ''
     #success_msg += 'Nodes:' + str(len(ips))
     #success_msg += '(%s)' % str(len(ans)) + ' '.join(ans)
-    return True
-
+    return len(ans)==1

@@ -36,14 +36,14 @@ class webcms(object):
         if(self.work_queue.empty() and self.NotFound is not False):
             self.NotFound = False
             #print "[webcms_check] Not Found!"
-            print("未知")
+            #print("未知")
             return False 
         if(self.NotFound is False):
             return False
         cms = self.work_queue.get()
         _url = self.url + cms["url"]
         html = self.Downloader.get(_url)
-        print "[webcms_check]:checking %s"%_url
+        #print "[webcms_check]:checking %s"%_url
         tmp = cms["re"].encode('utf-8')
         if(html is None):
             return False
@@ -52,14 +52,14 @@ class webcms(object):
                 self.result = cms["name"]
                 self.NotFound = False
                 #print "[webcms_check]cms is"%(cms["name"])
-                print(cms["name"])
+                #print(cms["name"])
                 return True
         else:
             md5 = self.md5(html)
             if(md5 == cms["md5"]):
                 self.result = cms["name"]
                 self.NotFound = False
-                print(cms["name"])
+                #print(cms["name"])
                 return True
 
     def run(self):
@@ -72,5 +72,5 @@ class webcms(object):
             for t in th:
                 t.join()
             if(self.result):
-                print(cms["name"])
+                return cms["name"]
                 #此处可以进行输

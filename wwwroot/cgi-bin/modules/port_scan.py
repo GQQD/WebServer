@@ -23,25 +23,31 @@ class PortScan:
     
     #端口扫描函数
     def _thread_scan(self):
-        
+        ret = ""
+        count = 0
         while not self.queue.empty():
+            count += 1
             #取出一个端口
             port = self.queue.get()
             #创建套接字
             sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
             #设置超时时间
-            sock.settimeout(1)
+            sock.settimeout(0.1)
             try:
                 #通过ip与端口号进行三次握手
                 sock.connect((self.ip,port))
                 #握手成功,表明该端口开放
-                print "[port_scan]%s:%s OPEN [%s]"%(self.ip,port,self.PORT[port])
+                #print "[port_scan]%s:%s OPEN [%s]"%(self.ip,port,self.PORT[port])
+                ret += "%s "%(port)
             except socket.error as msg:
                 #被RST或者服务器无响应,表明该端口关闭
-                print "[port_scan]%s:%s Close(%s)"%(self.ip,port,msg)
+                #print "[port_scan]%s:%s Close(%s)"%(self.ip,port,msg)
+                pass 
             finally:
                 #最终关闭套接字
                 sock.close()
+        print count
+        return ret
     def run(self):
         '''
         threads=[]
@@ -56,5 +62,5 @@ class PortScan:
         for t in threads:
             t.join()
         '''
-        self._thread_scan()
-        print "[port_scan]The scan is complete!"
+        return self._thread_scan()
+        #print "[port_scan]The scan is complete!"
